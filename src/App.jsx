@@ -1,15 +1,24 @@
 import { useState, useRef } from 'react'
 import ImageUploader from './components/ImageUploader.jsx'
+import ImageControls from './components/ImageControls.jsx'
 import CollageCanvas from './components/CollageCanvas.jsx'
 import './App.css'
+
+const DEFAULT_TRANSFORM = { scale: 1, x: 0, y: 0 }
 
 export default function App() {
   const [image1, setImage1] = useState(null)
   const [image2, setImage2] = useState(null)
   const [layout, setLayout] = useState('side-by-side')
+  const [transform1, setTransform1] = useState(DEFAULT_TRANSFORM)
+  const [transform2, setTransform2] = useState(DEFAULT_TRANSFORM)
   const canvasRef = useRef(null)
 
   const isReady = image1 && image2
+
+  // Reset transforms when a new image is loaded
+  const handleImage1 = (url) => { setImage1(url); setTransform1(DEFAULT_TRANSFORM) }
+  const handleImage2 = (url) => { setImage2(url); setTransform2(DEFAULT_TRANSFORM) }
 
   return (
     <div className="app">
@@ -35,25 +44,49 @@ export default function App() {
       </header>
 
       <main className="main">
-        {/* ── Upload row ── */}
-        <section className="section" aria-label="Upload photos">
+        {/* ── Upload + adjust ── */}
+        <section className="section" aria-label="Upload and adjust photos">
           <h2 className="section__label">Upload your photos</h2>
           <div className="uploaders">
-            <ImageUploader
-              label="Photo 1"
-              image={image1}
-              onImage={setImage1}
-              slot={1}
-            />
+
+            {/* Slot 1 */}
+            <div className="uploader-slot">
+              <ImageUploader
+                label="Photo 1"
+                image={image1}
+                onImage={handleImage1}
+                slot={1}
+              />
+              {image1 && (
+                <ImageControls
+                  slot={1}
+                  transform={transform1}
+                  onChange={setTransform1}
+                />
+              )}
+            </div>
+
             <div className="uploaders__divider" aria-hidden="true">
               <span>+</span>
             </div>
-            <ImageUploader
-              label="Photo 2"
-              image={image2}
-              onImage={setImage2}
-              slot={2}
-            />
+
+            {/* Slot 2 */}
+            <div className="uploader-slot">
+              <ImageUploader
+                label="Photo 2"
+                image={image2}
+                onImage={handleImage2}
+                slot={2}
+              />
+              {image2 && (
+                <ImageControls
+                  slot={2}
+                  transform={transform2}
+                  onChange={setTransform2}
+                />
+              )}
+            </div>
+
           </div>
         </section>
 
@@ -67,7 +100,6 @@ export default function App() {
               role="radio"
               aria-checked={layout === 'side-by-side'}
             >
-              {/* Side by side icon */}
               <svg viewBox="0 0 40 28" fill="none" className="layout-btn__icon">
                 <rect x="1" y="1" width="17" height="26" rx="4" stroke="currentColor" strokeWidth="2"/>
                 <rect x="22" y="1" width="17" height="26" rx="4" stroke="currentColor" strokeWidth="2"/>
@@ -80,8 +112,7 @@ export default function App() {
               role="radio"
               aria-checked={layout === 'stacked'}
             >
-              {/* Stacked icon */}
-              <svg viewBox="0 0 28 40" fill="none" className="layout-btn__icon">
+              <svg viewBox="0 0 28 40" fill="none" className="layout-btn__icon layout-btn__icon--tall">
                 <rect x="1" y="1" width="26" height="17" rx="4" stroke="currentColor" strokeWidth="2"/>
                 <rect x="1" y="22" width="26" height="17" rx="4" stroke="currentColor" strokeWidth="2"/>
               </svg>
@@ -99,6 +130,8 @@ export default function App() {
               image1={image1}
               image2={image2}
               layout={layout}
+              transform1={transform1}
+              transform2={transform2}
             />
           </div>
         </section>

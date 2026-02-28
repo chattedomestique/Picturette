@@ -1,38 +1,39 @@
 import { useRef, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react'
 import './CollageCanvas.css'
 
-// Canvas resolution — high enough for a quality download
 const CANVAS_SIZE = 1200
 
 /**
- * Draw an image "cover" style into a rectangular region.
- * The image fills the region completely while maintaining its aspect ratio;
- * any overflow is hidden by the caller's clip rect.
+ * Draw an image "cover" style into a rectangular region, applying
+ * the user's scale and pan offsets.
+ *
+ * x, y, w, h  — the clipping region on the canvas
+ * transform   — { scale, x, y } where x/y are fractions of the region size
  */
-function drawImageCover(ctx, img, x, y, w, h) {
+function drawImageCover(ctx, img, x, y, w, h, transform) {
+  const { scale = 1, x: ox = 0, y: oy = 0 } = transform || {}
   const imgRatio = img.naturalWidth / img.naturalHeight
   const areaRatio = w / h
 
-  let drawW, drawH, drawX, drawY
-
+  let baseW, baseH
   if (imgRatio > areaRatio) {
-    // Image is wider → fit by height, crop sides
-    drawH = h
-    drawW = h * imgRatio
-    drawX = x + (w - drawW) / 2
-    drawY = y
+    baseH = h
+    baseW = h * imgRatio
   } else {
-    // Image is taller → fit by width, crop top/bottom
-    drawW = w
-    drawH = w / imgRatio
-    drawX = x
-    drawY = y + (h - drawH) / 2
+    baseW = w
+    baseH = w / imgRatio
   }
+
+  const drawW = baseW * scale
+  const drawH = baseH * scale
+  // Center within region, then apply user offset (as fraction of region)
+  const drawX = x + (w - drawW) / 2 + ox * w
+  const drawY = y + (h - drawH) / 2 + oy * h
 
   ctx.drawImage(img, drawX, drawY, drawW, drawH)
 }
 
-function renderCollage(canvas, img1, img2, layout) {
+function renderCollage(canvas, img1, img2, layout, t1, t2) {
   const ctx = canvas.getContext('2d')
   const CW = canvas.width
   const CH = canvas.height
@@ -40,70 +41,75 @@ function renderCollage(canvas, img1, img2, layout) {
   ctx.clearRect(0, 0, CW, CH)
 
   if (layout === 'side-by-side') {
-    // Left half → image 1
     ctx.save()
     ctx.beginPath()
     ctx.rect(0, 0, CW / 2, CH)
     ctx.clip()
-    drawImageCover(ctx, img1, 0, 0, CW / 2, CH)
+    drawImageCover(ctx, img1, 0, 0, CW / 2, CH, t1)
     ctx.restore()
 
-    // Right half → image 2
     ctx.save()
     ctx.beginPath()
     ctx.rect(CW / 2, 0, CW / 2, CH)
     ctx.clip()
-    drawImageCover(ctx, img2, CW / 2, 0, CW / 2, CH)
+    drawImageCover(ctx, img2, CW / 2, 0, CW / 2, CH, t2)
     ctx.restore()
   } else {
-    // Top half → image 1
     ctx.save()
     ctx.beginPath()
     ctx.rect(0, 0, CW, CH / 2)
     ctx.clip()
-    drawImageCover(ctx, img1, 0, 0, CW, CH / 2)
+    drawImageCover(ctx, img1, 0, 0, CW, CH / 2, t1)
     ctx.restore()
 
-    // Bottom half → image 2
     ctx.save()
     ctx.beginPath()
     ctx.rect(0, CH / 2, CW, CH / 2)
     ctx.clip()
-    drawImageCover(ctx, img2, 0, CH / 2, CW, CH / 2)
+    drawImageCover(ctx, img2, 0, CH / 2, CW, CH / 2, t2)
     ctx.restore()
   }
 }
 
-const CollageCanvas = forwardRef(function CollageCanvas({ image1, image2, layout }, ref) {
+const CollageCanvas = forwardRef(function CollageCanvas(
+  { image1, image2, layout, transform1, transform2 },
+  ref
+) {
   const canvasRef = useRef(null)
   const img1Ref = useRef(null)
   const img2Ref = useRef(null)
 
-  const redraw = useCallback(() => {
-    if (!canvasRef.current || !img1Ref.current || !img2Ref.current) return
-    renderCollage(canvasRef.current, img1Ref.current, img2Ref.current, layout)
-  }, [layout])
+  // Stable ref always holds latest values — safe to read inside image-load callbacks
+  const stateRef = useRef({ layout, transform1, transform2 })
+  stateRef.current = { layout, transform1, transform2 }
 
-  // Load image 1
+  // Stable redraw function — never recreated, reads current state via stateRef
+  const doRedraw = useCallback(() => {
+    const canvas = canvasRef.current
+    if (!canvas || !img1Ref.current || !img2Ref.current) return
+    const { layout, transform1, transform2 } = stateRef.current
+    renderCollage(canvas, img1Ref.current, img2Ref.current, layout, transform1, transform2)
+  }, [])
+
+  // Load image 1 only when the URL changes
   useEffect(() => {
     if (!image1) { img1Ref.current = null; return }
     const img = new Image()
-    img.onload = () => { img1Ref.current = img; redraw() }
+    img.onload = () => { img1Ref.current = img; doRedraw() }
     img.src = image1
-  }, [image1, redraw])
+  }, [image1, doRedraw])
 
-  // Load image 2
+  // Load image 2 only when the URL changes
   useEffect(() => {
     if (!image2) { img2Ref.current = null; return }
     const img = new Image()
-    img.onload = () => { img2Ref.current = img; redraw() }
+    img.onload = () => { img2Ref.current = img; doRedraw() }
     img.src = image2
-  }, [image2, redraw])
+  }, [image2, doRedraw])
 
-  // Re-render whenever layout changes
-  useEffect(() => { redraw() }, [redraw])
+  // Redraw whenever layout or transforms change (sliders, toggle)
+  useEffect(() => { doRedraw() }, [layout, transform1, transform2, doRedraw])
 
-  // Expose download method to parent
   useImperativeHandle(ref, () => ({
     download() {
       const canvas = canvasRef.current

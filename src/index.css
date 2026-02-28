@@ -1,0 +1,39 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg-from: #fdf4ff;
+  --bg-to:   #eef2ff;
+  --purple:  #c084fc;
+  --indigo:  #818cf8;
+  --pink:    #f472b6;
+  --text:    #1e1b4b;
+  --text-muted: #6b7280;
+  --white-glass: rgba(255, 255, 255, 0.72);
+  --shadow-color: rgba(139, 92, 246, 0.18);
+}
+
+html {
+  font-size: 16px;
+}
+
+body {
+  font-family: 'Nunito', system-ui, sans-serif;
+  background: linear-gradient(140deg, var(--bg-from) 0%, var(--bg-to) 100%);
+  min-height: 100dvh;
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  cursor: pointer;
+  font-family: inherit;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}

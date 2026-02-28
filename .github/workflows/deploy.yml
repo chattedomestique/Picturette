@@ -2,7 +2,10 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
+      - claude/react-image-collage-app-3843Y
+  workflow_dispatch: # lets you press "Run workflow" in the Actions tab
 
 permissions:
   contents: read

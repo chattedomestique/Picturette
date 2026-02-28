@@ -3,13 +3,6 @@ import './CollageCanvas.css'
 
 const CANVAS_SIZE = 1200
 
-/**
- * Draw an image "cover" style into a rectangular region, applying
- * the user's scale and pan offsets.
- *
- * x, y, w, h  — the clipping region on the canvas
- * transform   — { scale, x, y } where x/y are fractions of the region size
- */
 function drawImageCover(ctx, img, x, y, w, h, transform) {
   const { scale = 1, x: ox = 0, y: oy = 0 } = transform || {}
   const imgRatio = img.naturalWidth / img.naturalHeight
@@ -26,7 +19,6 @@ function drawImageCover(ctx, img, x, y, w, h, transform) {
 
   const drawW = baseW * scale
   const drawH = baseH * scale
-  // Center within region, then apply user offset (as fraction of region)
   const drawX = x + (w - drawW) / 2 + ox * w
   const drawY = y + (h - drawH) / 2 + oy * h
 
@@ -72,18 +64,16 @@ function renderCollage(canvas, img1, img2, layout, t1, t2) {
 }
 
 const CollageCanvas = forwardRef(function CollageCanvas(
-  { image1, image2, layout, transform1, transform2 },
+  { image1, image2, layout, transform1, transform2, activeSlot, onSlotClick },
   ref
 ) {
   const canvasRef = useRef(null)
   const img1Ref = useRef(null)
   const img2Ref = useRef(null)
 
-  // Stable ref always holds latest values — safe to read inside image-load callbacks
   const stateRef = useRef({ layout, transform1, transform2 })
   stateRef.current = { layout, transform1, transform2 }
 
-  // Stable redraw function — never recreated, reads current state via stateRef
   const doRedraw = useCallback(() => {
     const canvas = canvasRef.current
     if (!canvas || !img1Ref.current || !img2Ref.current) return
@@ -91,7 +81,6 @@ const CollageCanvas = forwardRef(function CollageCanvas(
     renderCollage(canvas, img1Ref.current, img2Ref.current, layout, transform1, transform2)
   }, [])
 
-  // Load image 1 only when the URL changes
   useEffect(() => {
     if (!image1) { img1Ref.current = null; return }
     const img = new Image()
@@ -99,7 +88,6 @@ const CollageCanvas = forwardRef(function CollageCanvas(
     img.src = image1
   }, [image1, doRedraw])
 
-  // Load image 2 only when the URL changes
   useEffect(() => {
     if (!image2) { img2Ref.current = null; return }
     const img = new Image()
@@ -107,7 +95,6 @@ const CollageCanvas = forwardRef(function CollageCanvas(
     img.src = image2
   }, [image2, doRedraw])
 
-  // Redraw whenever layout or transforms change (sliders, toggle)
   useEffect(() => { doRedraw() }, [layout, transform1, transform2, doRedraw])
 
   useImperativeHandle(ref, () => ({
@@ -148,6 +135,7 @@ const CollageCanvas = forwardRef(function CollageCanvas(
           </p>
         </div>
       )}
+
       <canvas
         ref={canvasRef}
         width={CANVAS_SIZE}
@@ -155,6 +143,22 @@ const CollageCanvas = forwardRef(function CollageCanvas(
         className={`collage-canvas ${isReady ? '' : 'collage-canvas--hidden'}`}
         aria-label="Collage preview"
       />
+
+      {/* Transparent tap targets over each half — only shown when both images ready */}
+      {isReady && (
+        <div className={`collage-overlay ${layout === 'stacked' ? 'collage-overlay--stacked' : ''}`}>
+          <button
+            className={`collage-overlay__half ${activeSlot === 1 ? 'collage-overlay__half--active' : ''}`}
+            onClick={() => onSlotClick?.(1)}
+            aria-label="Edit photo 1"
+          />
+          <button
+            className={`collage-overlay__half ${activeSlot === 2 ? 'collage-overlay__half--active' : ''}`}
+            onClick={() => onSlotClick?.(2)}
+            aria-label="Edit photo 2"
+          />
+        </div>
+      )}
     </div>
   )
 })

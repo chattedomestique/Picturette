@@ -89,12 +89,6 @@
   gap: 0;
 }
 
-.uploader-slot {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
 .uploaders__divider {
   display: flex;
   align-items: center;
@@ -175,6 +169,33 @@
 /* ── Preview card ────────────────────────────────────────────────────── */
 .preview-card {
   padding: 12px;
+}
+
+/* ── Edit panel (slides in/out below preview) ────────────────────────── */
+.edit-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  /* Negative margin cancels the section gap so closed panel leaves no dead space */
+  margin-top: -14px;
+  transition:
+    grid-template-rows 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+    margin-top 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.edit-panel--open {
+  grid-template-rows: 1fr;
+  margin-top: 0;
+}
+
+.edit-panel__inner {
+  overflow: hidden;
+  /* padding-top creates breathing room; clipped to 0 when panel is closed */
+  padding-top: 0;
+  transition: padding-top 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.edit-panel--open .edit-panel__inner {
+  padding-top: 4px;
 }
 
 /* ── Download button ─────────────────────────────────────────────────── */

@@ -2,7 +2,7 @@ import './ImageControls.css'
 
 const DEFAULT = { scale: 1, x: 0, y: 0 }
 
-export default function ImageControls({ transform, onChange, slot }) {
+export default function ImageControls({ transform, onChange, onClose, slot }) {
   const { scale, x, y } = transform
   const set = (key, val) => onChange({ ...transform, [key]: val })
   const accent = slot === 1 ? 'controls--left' : 'controls--right'
@@ -10,10 +10,17 @@ export default function ImageControls({ transform, onChange, slot }) {
   return (
     <div className={`controls clay ${accent}`}>
       <div className="controls__header">
-        <span className="controls__title">Photo {slot}</span>
-        <button className="controls__reset" onClick={() => onChange(DEFAULT)}>
-          Reset
-        </button>
+        <span className="controls__title">Editing photo {slot}</span>
+        <div className="controls__actions">
+          <button className="controls__reset" onClick={() => onChange(DEFAULT)}>
+            Reset
+          </button>
+          <button className="controls__close" onClick={onClose} aria-label="Close editor">
+            <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M3 3l10 10M13 3L3 13" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"/>
+            </svg>
+          </button>
+        </div>
       </div>
 
       <div className="controls__rows">
@@ -40,7 +47,8 @@ export default function ImageControls({ transform, onChange, slot }) {
         <div className="controls__row">
           <span className="controls__icon" title="Move left / right">
             <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
-              <path d="M3 10h14M3 10l3-3M3 10l3 3M17 10l-3-3M17 10l-3 3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M3 10h14M3 10l3-3M3 10l3 3M17 10l-3-3M17 10l-3 3"
+                stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </span>
           <input
@@ -56,7 +64,8 @@ export default function ImageControls({ transform, onChange, slot }) {
         <div className="controls__row">
           <span className="controls__icon" title="Move up / down">
             <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
-              <path d="M10 3v14M10 3L7 6M10 3l3 3M10 17l-3-3M10 17l3-3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M10 3v14M10 3L7 6M10 3l3 3M10 17l-3-3M10 17l3-3"
+                stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </span>
           <input

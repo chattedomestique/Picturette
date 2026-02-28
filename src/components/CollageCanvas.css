@@ -76,3 +76,39 @@
   max-width: 220px;
   line-height: 1.5;
 }
+
+/* ── Tap overlay ─────────────────────────────────────────────────────── */
+.collage-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: row;
+  border-radius: 24px;
+  overflow: hidden;
+}
+
+.collage-overlay--stacked {
+  flex-direction: column;
+}
+
+.collage-overlay__half {
+  flex: 1;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.collage-overlay__half:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.collage-overlay__half:active {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* Subtle white inset ring on the active half */
+.collage-overlay__half--active {
+  box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.6);
+}

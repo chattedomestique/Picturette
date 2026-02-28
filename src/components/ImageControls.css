@@ -24,6 +24,12 @@
   color: var(--text-muted);
 }
 
+.controls__actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .controls__reset {
   font-size: 0.72rem;
   font-weight: 700;
@@ -37,6 +43,29 @@
 .controls__reset:hover {
   border-color: rgba(139, 92, 246, 0.5);
   color: var(--text);
+}
+
+.controls__close {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1.5px solid rgba(139, 92, 246, 0.25);
+  background: rgba(255, 255, 255, 0.6);
+  color: var(--text-muted);
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+.controls__close:hover {
+  border-color: rgba(139, 92, 246, 0.5);
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.85);
+}
+.controls__close svg {
+  width: 14px;
+  height: 14px;
 }
 
 /* Rows */

@@ -12,13 +12,18 @@ export default function App() {
   const [layout, setLayout] = useState('side-by-side')
   const [transform1, setTransform1] = useState(DEFAULT_TRANSFORM)
   const [transform2, setTransform2] = useState(DEFAULT_TRANSFORM)
+  const [activeSlot, setActiveSlot] = useState(null)
   const canvasRef = useRef(null)
 
   const isReady = image1 && image2
 
-  // Reset transforms when a new image is loaded
   const handleImage1 = (url) => { setImage1(url); setTransform1(DEFAULT_TRANSFORM) }
   const handleImage2 = (url) => { setImage2(url); setTransform2(DEFAULT_TRANSFORM) }
+
+  const handleSlotClick = (slot) => {
+    // Tapping the already-active slot keeps it open; tapping the other switches
+    setActiveSlot(slot)
+  }
 
   return (
     <div className="app">
@@ -44,49 +49,13 @@ export default function App() {
       </header>
 
       <main className="main">
-        {/* ── Upload + adjust ── */}
-        <section className="section" aria-label="Upload and adjust photos">
+        {/* ── Upload ── */}
+        <section className="section" aria-label="Upload photos">
           <h2 className="section__label">Upload your photos</h2>
           <div className="uploaders">
-
-            {/* Slot 1 */}
-            <div className="uploader-slot">
-              <ImageUploader
-                label="Photo 1"
-                image={image1}
-                onImage={handleImage1}
-                slot={1}
-              />
-              {image1 && (
-                <ImageControls
-                  slot={1}
-                  transform={transform1}
-                  onChange={setTransform1}
-                />
-              )}
-            </div>
-
-            <div className="uploaders__divider" aria-hidden="true">
-              <span>+</span>
-            </div>
-
-            {/* Slot 2 */}
-            <div className="uploader-slot">
-              <ImageUploader
-                label="Photo 2"
-                image={image2}
-                onImage={handleImage2}
-                slot={2}
-              />
-              {image2 && (
-                <ImageControls
-                  slot={2}
-                  transform={transform2}
-                  onChange={setTransform2}
-                />
-              )}
-            </div>
-
+            <ImageUploader label="Photo 1" image={image1} onImage={handleImage1} slot={1} />
+            <div className="uploaders__divider" aria-hidden="true"><span>+</span></div>
+            <ImageUploader label="Photo 2" image={image2} onImage={handleImage2} slot={2} />
           </div>
         </section>
 
@@ -97,8 +66,7 @@ export default function App() {
             <button
               className={`layout-btn ${layout === 'side-by-side' ? 'layout-btn--active' : ''}`}
               onClick={() => setLayout('side-by-side')}
-              role="radio"
-              aria-checked={layout === 'side-by-side'}
+              role="radio" aria-checked={layout === 'side-by-side'}
             >
               <svg viewBox="0 0 40 28" fill="none" className="layout-btn__icon">
                 <rect x="1" y="1" width="17" height="26" rx="4" stroke="currentColor" strokeWidth="2"/>
@@ -109,8 +77,7 @@ export default function App() {
             <button
               className={`layout-btn ${layout === 'stacked' ? 'layout-btn--active' : ''}`}
               onClick={() => setLayout('stacked')}
-              role="radio"
-              aria-checked={layout === 'stacked'}
+              role="radio" aria-checked={layout === 'stacked'}
             >
               <svg viewBox="0 0 28 40" fill="none" className="layout-btn__icon layout-btn__icon--tall">
                 <rect x="1" y="1" width="26" height="17" rx="4" stroke="currentColor" strokeWidth="2"/>
@@ -121,9 +88,12 @@ export default function App() {
           </div>
         </section>
 
-        {/* ── Preview ── */}
+        {/* ── Preview + edit panel ── */}
         <section className="section" aria-label="Collage preview">
-          <h2 className="section__label">Preview</h2>
+          <h2 className="section__label">
+            {isReady && !activeSlot ? 'Preview — tap a photo to adjust' : 'Preview'}
+          </h2>
+
           <div className="clay preview-card">
             <CollageCanvas
               ref={canvasRef}
@@ -132,7 +102,23 @@ export default function App() {
               layout={layout}
               transform1={transform1}
               transform2={transform2}
+              activeSlot={activeSlot}
+              onSlotClick={isReady ? handleSlotClick : undefined}
             />
+          </div>
+
+          {/* Sliding edit panel — always mounted so the transition animates */}
+          <div className={`edit-panel ${activeSlot ? 'edit-panel--open' : ''}`}>
+            <div className="edit-panel__inner">
+              {activeSlot && (
+                <ImageControls
+                  slot={activeSlot}
+                  transform={activeSlot === 1 ? transform1 : transform2}
+                  onChange={activeSlot === 1 ? setTransform1 : setTransform2}
+                  onClose={() => setActiveSlot(null)}
+                />
+              )}
+            </div>
           </div>
         </section>
 
